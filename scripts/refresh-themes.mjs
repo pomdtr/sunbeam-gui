@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import degit from "degit";
 import path from "path";
 import fs from "fs/promises";
