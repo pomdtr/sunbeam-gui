@@ -4,6 +4,7 @@
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
+    "start": "electron .",
     "build": "DEBUG=electron-builder electron-builder",
     "lint": "echo \"No linting configured\"",
     "refresh-themes": "node scripts/refresh-themes.mjs"
@@ -25,10 +26,7 @@
   },
   "build": {
     "appId": "com.electron.sunbeam",
-    "productName": "Sunbeam",
-    "extraResources": [
-      "./bin/sunbeam"
-    ]
+    "productName": "Sunbeam"
   },
   "devDependencies": {
     "degit": "^2.8.4",

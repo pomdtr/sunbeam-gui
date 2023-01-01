@@ -174,11 +174,8 @@ app.whenReady().then(async () => {
 function runSunbeam(win) {
   return new Promise((resolve, reject) => {
     const disposables = [];
-    const sunbeam = app.isPackaged
-      ? path.join(process.resourcesPath, "sunbeam")
-      : "sunbeam";
 
-    const ptyProcess = pty.spawn(sunbeam, [], {
+    const ptyProcess = pty.spawn("sunbeam", [], {
       env: {
         ...process.env,
         TERM: "xterm-256color",
