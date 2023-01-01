@@ -51,4 +51,8 @@ terminal.onData((data) => {
   window.pty.write(data);
 });
 
+window.onresize = () => {
+  fitAddon.fit();
+};
+
 fitAddon.fit();
