@@ -26,7 +26,25 @@
   },
   "build": {
     "appId": "com.electron.sunbeam",
-    "productName": "Sunbeam"
+    "productName": "Sunbeam",
+    "mac": {
+      "target": {
+        "target": "default",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      }
+    },
+    "linux": {
+      "target": {
+        "target": "AppImage",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      }
+    }
   },
   "devDependencies": {
     "degit": "^2.8.4",
