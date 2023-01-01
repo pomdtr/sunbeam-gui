@@ -1,6 +1,6 @@
 {
   "name": "sunbeam-gui",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -27,6 +27,7 @@
   "build": {
     "appId": "com.electron.sunbeam",
     "productName": "Sunbeam",
+    "npmRebuild": false,
     "mac": {
       "target": {
         "target": "default",
