@@ -1,6 +1,6 @@
 {
   "name": "sunbeam-gui",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -17,7 +17,7 @@
   "license": "MIT",
   "dependencies": {
     "electron-squirrel-startup": "^1.0.0",
-    "node-pty": "^0.10.1",
+    "node-pty-prebuilt-multiarch": "^0.10.0",
     "xterm": "^5.1.0",
     "xterm-addon-canvas": "^0.3.0",
     "xterm-addon-fit": "^0.7.0",
