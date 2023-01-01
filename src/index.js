@@ -54,7 +54,10 @@ function createWindow() {
 
   ipcMain.handle("theme", async () => {
     const theme = process.env.SUNBEAM_THEME || "tomorrow-night";
-    const content = await fs.readFile(`themes/${theme}.json`, "utf-8");
+    const content = await fs.readFile(
+      path.join(__dirname, "..", "themes", `${theme}.json`),
+      "utf-8"
+    );
     return JSON.parse(content);
   });
 
