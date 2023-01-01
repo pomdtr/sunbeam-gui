@@ -5,7 +5,6 @@ const {
   screen,
   ipcMain,
   shell,
-  clipboard,
 } = require("electron");
 const path = require("path");
 const url = require("url");
@@ -54,16 +53,6 @@ function createWindow() {
   win.loadFile(path.join(__dirname, "index.html"));
   ipcMain.handle("hideWindow", () => win.hide());
   ipcMain.handle("showWindow", () => win.show());
-
-  ipcMain.handle("copyToClipboard", (_, text) => {
-    clipboard.writeText(text);
-  });
-  ipcMain.handle("openInBrowser", (_, url) => {
-    return shell.openExternal(url);
-  });
-  ipcMain.handle("open", (_, path) => {
-    return shell.openPath(path);
-  });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -131,7 +120,10 @@ app.whenReady().then(async () => {
       }
     });
     while (true) {
-      await runSunbeam(win);
+      const signal = await runSunbeam(win);
+      if (signal !== 0) {
+        break;
+      }
       win.hide();
     }
   });
@@ -177,13 +169,19 @@ function runSunbeam(win) {
 
     win.webContents.send("pty-ready");
 
-    ptyProcess.onExit(({ exitCode }) => {
+    app.on("will-quit", () => {
+      ptyProcess.kill();
+    });
+
+    ptyProcess.onExit(({ exitCode, signal }) => {
       ipcMain.removeAllListeners("pty-resize");
       ipcMain.removeAllListeners("pty-input");
+      app.removeAllListeners("will-quit");
       disposables.forEach((d) => d.dispose());
 
       if (exitCode === 0) {
-        resolve();
+        console.log("Sunbeam exited with code 0");
+        resolve(signal);
       } else {
         reject(new Error(`Sunbeam exited with code ${exitCode}`));
       }
