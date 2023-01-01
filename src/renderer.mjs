@@ -35,6 +35,10 @@ terminal.onResize((dimensions) => {
   window.pty.resize(cols, rows);
 });
 
+webglAddon.onContextLoss(() => {
+  location.reload();
+});
+
 window.pty.onExit(() => {
   terminal.clear();
 });
