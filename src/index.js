@@ -38,7 +38,6 @@ function createWindow() {
     minimizable: false,
     transparent: true,
     maximizable: false,
-    vibrancy: "under-window",
     fullscreenable: false,
     movable: false,
     autoHideMenuBar: true,
