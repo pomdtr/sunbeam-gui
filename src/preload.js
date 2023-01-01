@@ -3,6 +3,10 @@
 
 const { contextBridge, ipcRenderer } = require("electron");
 
+contextBridge.exposeInMainWorld("sunbeam", {
+  getTheme: (theme) => ipcRenderer.invoke("theme", theme),
+});
+
 contextBridge.exposeInMainWorld("pty", {
   write: (data) => ipcRenderer.send("pty-input", data),
   onData: (callback) => {

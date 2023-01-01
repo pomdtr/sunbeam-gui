@@ -10,6 +10,7 @@ const {
 } = require("electron");
 const path = require("path");
 const pty = require("node-pty");
+const fs = require("fs/promises");
 const os = require("os");
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
@@ -36,7 +37,6 @@ function createWindow() {
     alwaysOnTop: true,
     skipTaskbar: true,
     minimizable: false,
-    transparent: true,
     maximizable: false,
     fullscreenable: false,
     movable: false,
@@ -51,8 +51,12 @@ function createWindow() {
   });
   win.setMenu(null);
   win.loadFile(path.join(__dirname, "index.html"));
-  ipcMain.handle("hideWindow", () => win.hide());
-  ipcMain.handle("showWindow", () => win.show());
+
+  ipcMain.handle("theme", async () => {
+    const theme = process.env.SUNBEAM_THEME || "tomorrow-night";
+    const content = await fs.readFile(`themes/${theme}.json`, "utf-8");
+    return JSON.parse(content);
+  });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
