@@ -11,5 +11,8 @@ contextBridge.exposeInMainWorld("pty", {
   onReady: (callback) => {
     ipcRenderer.on("pty-ready", (_, data) => callback(data));
   },
+  onExit: (callback) => {
+    ipcRenderer.on("pty-ready", (_, data) => callback(data));
+  },
   resize: (columns, rows) => ipcRenderer.send("pty-resize", columns, rows),
 });

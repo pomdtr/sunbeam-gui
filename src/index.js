@@ -163,14 +163,6 @@ app.whenReady().then(async () => {
       win.hide();
     }
   });
-
-  app.on("open-url", (_, sunbeamUrl) => {
-    const parsedUrl = url.parse(sunbeamUrl);
-    switch (parsedUrl.host) {
-      case "run":
-        win.loadFile(MAIN_WINDOW_WEBPACK_ENTRY);
-    }
-  });
 });
 
 function runSunbeam(win) {
@@ -180,12 +172,15 @@ function runSunbeam(win) {
       ? path.join(process.resourcesPath, "sunbeam")
       : "sunbeam";
 
-    const { shell } = os.userInfo();
-
-    const ptyProcess = pty.spawn(shell, ["-c", sunbeam], {
+    const ptyProcess = pty.spawn(sunbeam, [], {
       env: {
         ...process.env,
         TERM: "xterm-256color",
+        PATH: `${
+          process.resourcesPath
+        }:${os.homedir()}/.local/bin:/opt/homebrew/bin:usr/local/bin:${
+          process.env.PATH
+        }`,
       },
     });
 
@@ -203,13 +198,15 @@ function runSunbeam(win) {
       ptyProcess.write(data);
     });
 
-    win.webContents.send("pty-ready");
-
     app.on("will-quit", () => {
       ptyProcess.kill();
     });
 
     ptyProcess.onExit(({ exitCode, signal }) => {
+      if (!win.isDestroyed()) {
+        win.webContents.send("pty-exit");
+      }
+
       ipcMain.removeAllListeners("pty-resize");
       ipcMain.removeAllListeners("pty-input");
       app.removeAllListeners("will-quit");
@@ -222,5 +219,7 @@ function runSunbeam(win) {
         reject(new Error(`Sunbeam exited with code ${exitCode}`));
       }
     });
+
+    win.webContents.send("pty-ready");
   });
 }

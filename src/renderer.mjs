@@ -58,6 +58,10 @@ terminal.onResize((dimensions) => {
   window.pty.resize(cols, rows);
 });
 
+window.pty.onExit(() => {
+  terminal.clear();
+});
+
 window.pty.onReady(() => {
   window.pty.resize(cols, rows);
 });
