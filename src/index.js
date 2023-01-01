@@ -5,9 +5,10 @@ const {
   screen,
   ipcMain,
   shell,
+  Tray,
+  Menu,
 } = require("electron");
 const path = require("path");
-const url = require("url");
 const pty = require("node-pty");
 const os = require("os");
 
@@ -119,6 +120,41 @@ app.whenReady().then(async () => {
         win.show();
       }
     });
+
+    const tray = new Tray(
+      path.join(__dirname, "..", "assets", "tray-Template.png")
+    );
+    console.log(path.join(os.homedir(), ".config", "sunbeam", "config.yml"));
+    const contextMenu = Menu.buildFromTemplate([
+      { type: "normal", label: "Open Sunbeam", click: () => win.show() },
+      {
+        type: "normal",
+        label: "Open Config",
+        click: () =>
+          shell.openPath(
+            path.join(os.homedir(), ".config", "sunbeam", "config.yaml")
+          ),
+      },
+      { type: "separator" },
+      {
+        type: "normal",
+        label: "Manual",
+        click: () =>
+          shell.openExternal("https://sunbeamlauncher.github.io/sunbeam"),
+      },
+      {
+        type: "normal",
+        label: "Report Bug",
+        click: () =>
+          shell.openExternal(
+            "http://github.com/SunbeamLauncher/sunbeam/issues/new"
+          ),
+      },
+      { type: "separator" },
+      { type: "normal", label: "Quit", click: () => app.quit() },
+    ]);
+    tray.setContextMenu(contextMenu);
+
     while (true) {
       const signal = await runSunbeam(win);
       if (signal !== 0) {
