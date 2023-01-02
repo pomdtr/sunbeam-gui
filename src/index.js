@@ -9,7 +9,7 @@ const {
   Menu,
 } = require("electron");
 const path = require("path");
-const pty = require("node-pty-prebuilt-multiarch");
+const pty = require("node-pty");
 const fs = require("fs/promises");
 const os = require("os");
 
