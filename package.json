@@ -26,7 +26,6 @@
   },
   "build": {
     "appId": "com.electron.sunbeam",
-    "asar": false,
     "productName": "Sunbeam",
     "publish": [
       "github"
@@ -43,7 +42,6 @@
       "target": {
         "target": "AppImage",
         "arch": [
-          "x64",
           "arm64"
         ]
       }

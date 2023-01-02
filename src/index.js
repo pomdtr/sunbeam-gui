@@ -10,10 +10,17 @@ const {
 } = require("electron");
 const path = require("path");
 const pty = require("node-pty");
-const fs = require("fs/promises");
+const fs = require("fs");
+const fspromises = require("fs/promises");
 const os = require("os");
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
+
+let PATH = process.env.PATH;
+const userpath = path.join(os.homedir(), ".config", "sunbeam-gui", "env");
+if (fs.existsSync(userpath)) {
+  PATH = fs.readFileSync(userpath);
+}
 
 const isSingleInstance = app.requestSingleInstanceLock();
 if (!isSingleInstance) {
@@ -54,7 +61,7 @@ function createWindow() {
 
   ipcMain.handle("theme", async () => {
     const theme = process.env.SUNBEAM_THEME || "tomorrow-night";
-    const content = await fs.readFile(
+    const content = await fspromises.readFile(
       path.join(__dirname, "..", "themes", `${theme}.json`),
       "utf-8"
     );
@@ -130,7 +137,6 @@ app.whenReady().then(async () => {
     const tray = new Tray(
       path.join(__dirname, "..", "assets", "tray-Template.png")
     );
-    console.log(path.join(os.homedir(), ".config", "sunbeam", "config.yml"));
     const contextMenu = Menu.buildFromTemplate([
       { type: "normal", label: "Open Sunbeam", click: () => win.show() },
       {
@@ -179,11 +185,7 @@ function runSunbeam(win) {
       env: {
         ...process.env,
         TERM: "xterm-256color",
-        PATH: `${
-          process.resourcesPath
-        }:${os.homedir()}/.local/bin:/opt/homebrew/bin:usr/local/bin:${
-          process.env.PATH
-        }`,
+        PATH,
       },
     });
 
