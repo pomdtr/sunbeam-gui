@@ -19,9 +19,10 @@ jobs:
         with:
           node-version: 16
 
+      - name: Install Dependencies
+        run: npm install
+
       - name: Build/release Electron app
-        run: |
-          npm install
-          npm run build
+        run: npm run build
         env:
           GH_TOKEN: ${{ secrets.github_token }}
