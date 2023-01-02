@@ -27,7 +27,6 @@
   "build": {
     "appId": "com.electron.sunbeam",
     "productName": "Sunbeam",
-    "npmRebuild": false,
     "mac": {
       "target": {
         "target": "default",
