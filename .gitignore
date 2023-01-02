@@ -91,3 +91,4 @@ out/
 dist/
 
 themes
+.envrc

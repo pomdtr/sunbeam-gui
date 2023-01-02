@@ -13,6 +13,8 @@ jobs:
     steps:
       - name: Check out Git repository
         uses: actions/checkout@v1
+      - name: Fetch tags
+        run: git fetch --prune --unshallow --tags
 
       - name: Install Node.js, NPM and Yarn
         uses: actions/setup-node@v3

@@ -1,11 +1,11 @@
 {
   "name": "sunbeam-gui",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
     "start": "electron .",
-    "build": "DEBUG=electron-builder electron-builder",
+    "release": "electron-builder",
     "lint": "echo \"No linting configured\"",
     "refresh-themes": "node scripts/refresh-themes.mjs"
   },
@@ -27,6 +27,9 @@
   "build": {
     "appId": "com.electron.sunbeam",
     "productName": "Sunbeam",
+    "publish": [
+      "github"
+    ],
     "mac": {
       "target": {
         "target": "default",
