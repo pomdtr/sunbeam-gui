@@ -1,6 +1,6 @@
 {
     "taskManager.exclude": "out/.+",
     "search.exclude": {
-        "**/out": true,
+        "**/dist": true,
     }
 }
