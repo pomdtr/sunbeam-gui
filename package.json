@@ -1,6 +1,6 @@
 {
   "name": "sunbeam-gui",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -26,6 +26,7 @@
   },
   "build": {
     "appId": "com.electron.sunbeam",
+    "asar": false,
     "productName": "Sunbeam",
     "publish": [
       "github"
