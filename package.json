@@ -1,6 +1,6 @@
 {
   "name": "sunbeam-gui",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "My Electron application description",
   "main": "src/index.js",
   "scripts": {
@@ -34,8 +34,7 @@
       "target": {
         "target": "default",
         "arch": [
-          "x64",
-          "arm64"
+          "universal"
         ]
       }
     },
