@@ -27,25 +27,10 @@
   "build": {
     "appId": "com.electron.sunbeam",
     "productName": "Sunbeam",
+    "artifactName": "${productName}-${version}-${arch}.${ext}",
     "publish": [
       "github"
-    ],
-    "mac": {
-      "target": {
-        "target": "default",
-        "arch": [
-          "universal"
-        ]
-      }
-    },
-    "linux": {
-      "target": {
-        "target": "AppImage",
-        "arch": [
-          "arm64"
-        ]
-      }
-    }
+    ]
   },
   "devDependencies": {
     "degit": "^2.8.4",
