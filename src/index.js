@@ -29,6 +29,10 @@ app.on("window-all-closed", () => {
   app.quit();
 });
 
+if (process.platform === "darwin") {
+  app.dock.hide();
+}
+
 function createWindow(theme) {
   const bounds = getCenterOnCurrentScreen();
   const win = new BrowserWindow({
@@ -44,7 +48,6 @@ function createWindow(theme) {
     maximizable: false,
     fullscreenable: false,
     movable: false,
-    autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
       backgroundThrottling: false,
@@ -56,6 +59,7 @@ function createWindow(theme) {
       ? theme.dark.background
       : theme.light.background,
   });
+
   win.loadFile(path.join(__dirname, "index.html"));
 
   nativeTheme.on("updated", () => {
@@ -240,6 +244,8 @@ app.whenReady().then(async () => {
   } catch (e) {
     console.error(e);
   }
+
+  Menu.setApplicationMenu(null);
   const win = createWindow(theme);
   registerShortcut(win);
   createTray(win);
