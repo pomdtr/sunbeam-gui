@@ -158,9 +158,23 @@ function startSunbeam(shell, host, port) {
     });
 
     let exited = false;
-    sunbeamProcess.on("exit", () => {
+    let running = true;
+
+    onWillQuit = () => {
+      sunbeamProcess.kill();
+    };
+    app.on("will-quit", onWillQuit);
+
+    sunbeamProcess.on("exit", (code, signal) => {
       exited = true;
-      reject("Sunbeam exited");
+
+      if (signal === "SIGINT") {
+        app.removeListener("will-quit", onWillQuit);
+        app.quit();
+      } else {
+        console.log(`Sunbeam exited with code ${code} and signal ${signal}`);
+        reject(`Sunbeam exited with signal ${signal}`);
+      }
     });
 
     sunbeamProcess.on("spawn", async () => {
@@ -170,6 +184,7 @@ function startSunbeam(shell, host, port) {
         try {
           const res = await fetch(`http://${host}:${port}`);
           if (res.status === 200) {
+            running = true;
             resolve(`${host}:${port}`);
             break;
           }

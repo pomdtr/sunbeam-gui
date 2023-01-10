@@ -59,7 +59,9 @@ try {
     fitAddon.fit();
   };
 } catch (e) {
-  terminal.writeln("Sunbeam not found");
+  terminal.write(
+    "Sunbeam not found! Please install sunbeam and setup your shell."
+  );
 }
 
 terminal.focus();
