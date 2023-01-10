@@ -36,7 +36,20 @@
     "artifactName": "${productName}_${platform}_${arch}.${ext}",
     "publish": [
       "github"
-    ]
+    ],
+    "mac": {
+      "target": {
+        "target": "default",
+        "arch": [
+          "universal"
+        ]
+      }
+    },
+    "linux": {
+      "target": {
+        "target": "AppImage"
+      }
+    }
   },
   "devDependencies": {
     "degit": "^2.8.4",
