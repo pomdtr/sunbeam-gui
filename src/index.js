@@ -2,6 +2,7 @@ const {
   app,
   BrowserWindow,
   globalShortcut,
+  clipboard,
   screen,
   ipcMain,
   shell,
@@ -15,6 +16,7 @@ const child_process = require("child_process");
 const portfinder = require("portfinder");
 const minimist = require("minimist");
 const fetch = require("node-fetch");
+const { parse } = require("url");
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
@@ -140,11 +142,12 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function startSunbeam(shell, host, port) {
+function startSunbeam(host, port) {
+  const shell = findDefaultShell();
   return new Promise((resolve, reject) => {
     const sunbeamProcess = child_process.spawn(
       shell,
-      ["-lic", `sunbeam serve --host ${host} --port ${port}`],
+      ["-lic", `sunbeam listen --host ${host} --port ${port}`],
       {
         env: {
           ...process.env,
@@ -226,11 +229,7 @@ const findDefaultShell = () => {
 };
 
 app.whenReady().then(async () => {
-  const {
-    shell = findDefaultShell(),
-    host = "localhost",
-    port = await portfinder.getPortPromise(),
-  } = minimist(process.argv.slice(2));
+  const args = minimist(process.argv.slice(2));
 
   const themeDir = path.join(__dirname, "..", "themes");
   var theme = {
@@ -247,9 +246,33 @@ app.whenReady().then(async () => {
   });
 
   try {
-    const address = await startSunbeam(shell, host, port);
+    const { host = "localhost", port = await portfinder.getPortPromise() } =
+      args;
+    const address = await startSunbeam(host, port);
+
     ipcMain.handle("address", async () => {
       return address;
+    });
+
+    ipcMain.handle("open", (_, url) => {
+      const { protocol, path } = parse(url);
+
+      switch (protocol) {
+        case "fs:":
+          if (host !== "localhost" && host !== "0.0.0.0") {
+            console.error("Cannot open local file on remote host");
+            return;
+          }
+          shell.openPath(path);
+          break;
+        default:
+          shell.openExternal(url);
+          break;
+      }
+    });
+
+    ipcMain.handle("copy", (_, text) => {
+      clipboard.writeText(text);
     });
   } catch (e) {
     console.error(e);

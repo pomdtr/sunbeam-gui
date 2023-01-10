@@ -44,6 +44,24 @@ try {
     fitAddon.fit();
   };
 
+  ws.onmessage = ({ data }) => {
+    if (typeof data !== "string") {
+      return;
+    }
+
+    const payload = JSON.parse(data);
+    console.log("payload", payload);
+
+    switch (payload.type) {
+      case "open":
+        window.electron.open(payload.url);
+        break;
+      case "copy-text":
+        window.electron.copy(payload.text);
+        break;
+    }
+  };
+
   ws.onclose = () => {
     window.electron.hideWindow();
     location.reload();

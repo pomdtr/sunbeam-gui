@@ -7,4 +7,6 @@ contextBridge.exposeInMainWorld("electron", {
   getTheme: () => ipcRenderer.invoke("theme"),
   getAddress: () => ipcRenderer.invoke("address"),
   hideWindow: () => ipcRenderer.invoke("hideWindow"),
+  copy: (text) => ipcRenderer.invoke("copy", text),
+  open: (url) => ipcRenderer.invoke("open", url),
 });
