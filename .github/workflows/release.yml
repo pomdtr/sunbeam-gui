@@ -29,9 +29,6 @@ jobs:
       - name: Install Dependencies
         run: npm ci
 
-      - name: install-themes
-        run: npm run refresh-themes
-
       - name: Build/release Electron app
         run: npm run release
         env:
