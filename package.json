@@ -5,7 +5,7 @@
   "main": "src/index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder --publish never",
+    "build": "electron-builder",
     "lint": "echo \"No linting configured\"",
     "install-app:mac": "npm run build && rm -rf /Application/Sunbeam.app && cp -r dist/mac-arm64/Sunbeam.app /Applications",
     "refresh-themes": "node scripts/refresh-themes.mjs"
