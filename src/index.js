@@ -176,14 +176,19 @@ async function startSunbeam(host, port) {
   console.log(`Sunbeam path: ${sunbeamPath}`);
   console.log(`Sunbeam host: ${host}`);
   console.log(`Sunbeam port: ${port}`);
+
+  const shell = process.env.SHELL || "/bin/bash";
   return new Promise((resolve, reject) => {
     const sunbeamProcess = child_process.spawn(
-      sunbeamPath,
-      ["serve", "--host", host, "--port", port],
+      shell,
+      [
+        os.platform == "darwin" ? "-lc" : "-ic",
+        `${sunbeamPath} serve --host ${host} --port ${port}`,
+      ],
       {
         env: {
           ...process.env,
-          TERM: "xterm-256colors",
+          TERM: "xterm-256color",
           PATH: `${binPath}:${process.env.PATH}`,
         },
       }
