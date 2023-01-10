@@ -11,10 +11,7 @@ const {
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
-const os = require("os");
 const child_process = require("child_process");
-const download = require("download");
-const { Octokit } = require("octokit");
 const portfinder = require("portfinder");
 const minimist = require("minimist");
 const fetch = require("node-fetch");
@@ -139,13 +136,7 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-function startSunbeam(host, port) {
-  // start sunbeam process
-
-  console.log(`Sunbeam host: ${host}`);
-  console.log(`Sunbeam port: ${port}`);
-
-  const shell = process.env.SHELL || "/bin/bash";
+function startSunbeam(shell, host, port) {
   return new Promise((resolve, reject) => {
     const sunbeamProcess = child_process.spawn(
       shell,
@@ -206,8 +197,11 @@ function registerShortcut(win) {
 }
 
 app.whenReady().then(async () => {
-  const { host = "localhost", port = await portfinder.getPortPromise() } =
-    minimist(process.argv.slice(2));
+  const {
+    shell = process.env.SHELL || "/bin/bash",
+    host = "localhost",
+    port = await portfinder.getPortPromise(),
+  } = minimist(process.argv.slice(2));
 
   const themeDir = path.join(__dirname, "..", "themes");
   var theme = {
@@ -224,7 +218,7 @@ app.whenReady().then(async () => {
   });
 
   try {
-    const address = await startSunbeam(host, port);
+    const address = await startSunbeam(shell, host, port);
     ipcMain.handle("address", async () => {
       return address;
     });
