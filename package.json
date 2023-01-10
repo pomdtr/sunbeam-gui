@@ -5,8 +5,9 @@
   "main": "src/index.js",
   "scripts": {
     "start": "electron .",
-    "release": "electron-builder",
+    "build": "electron-builder --publish never",
     "lint": "echo \"No linting configured\"",
+    "install-app:mac": "npm run build && rm -rf /Application/Sunbeam.app && cp -r dist/mac-arm64/Sunbeam.app /Applications",
     "refresh-themes": "node scripts/refresh-themes.mjs"
   },
   "keywords": [],
@@ -16,9 +17,13 @@
   },
   "license": "MIT",
   "dependencies": {
-    "electron-squirrel-startup": "^1.0.0",
-    "node-pty": "^0.10.1",
+    "download": "^8.0.0",
+    "lookpath": "^1.2.2",
+    "minimist": "^1.2.7",
+    "octokit": "^2.0.11",
+    "portfinder": "^1.0.32",
     "xterm": "^5.1.0",
+    "xterm-addon-attach": "^0.8.0",
     "xterm-addon-canvas": "^0.3.0",
     "xterm-addon-fit": "^0.7.0",
     "xterm-addon-web-links": "^0.8.0",

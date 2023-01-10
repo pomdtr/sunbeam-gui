@@ -9,18 +9,16 @@ const {
   Menu,
 } = require("electron");
 const path = require("path");
-const pty = require("node-pty");
 const fs = require("fs");
-const fspromises = require("fs/promises");
 const os = require("os");
+const child_process = require("child_process");
+const { lookpath } = require("lookpath");
+const download = require("download");
+const { Octokit } = require("octokit");
+const portfinder = require("portfinder");
+const minimist = require("minimist");
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
-
-let PATH = process.env.PATH;
-const userpath = path.join(os.homedir(), ".config", "sunbeam-gui", "env");
-if (fs.existsSync(userpath)) {
-  PATH = fs.readFileSync(userpath);
-}
 
 const isSingleInstance = app.requestSingleInstanceLock();
 if (!isSingleInstance) {
@@ -32,7 +30,7 @@ app.on("window-all-closed", () => {
   app.quit();
 });
 
-function createWindow() {
+function createWindow(theme) {
   const bounds = getCenterOnCurrentScreen();
   const win = new BrowserWindow({
     title: "Sunbeam",
@@ -53,27 +51,18 @@ function createWindow() {
     },
     resizable: false,
     type: "panel",
-    show: false,
     hasShadow: true,
+    backgroundColor: theme.background,
   });
   win.setMenu(null);
   win.loadFile(path.join(__dirname, "index.html"));
-
-  ipcMain.handle("theme", async () => {
-    const theme = process.env.SUNBEAM_THEME || "tomorrow-night";
-    const content = await fspromises.readFile(
-      path.join(__dirname, "..", "themes", `${theme}.json`),
-      "utf-8"
-    );
-    return JSON.parse(content);
-  });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
     return { action: "deny" };
   });
 
-  win.webContents.on("did-start-loading", () => {
+  ipcMain.handle("hideWindow", () => {
     win.hide();
   });
 
@@ -106,47 +95,13 @@ const getCenterOnCurrentScreen = () => {
   };
 };
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-app.on("window-all-closed", () => {
-  // pass
-});
-app.setAsDefaultProtocolClient("sunbeam");
-if (process.platform === "darwin") {
-  app.dock.hide();
-}
-
-app.whenReady().then(async () => {
-  const win = createWindow();
-  win.webContents.on("dom-ready", async () => {
-    globalShortcut.register("CommandOrControl+;", async () => {
-      if (win.isVisible()) {
-        win.hide();
-      } else {
-        const bounds = getCenterOnCurrentScreen();
-        if (JSON.stringify(bounds) !== JSON.stringify(win.getBounds())) {
-          win.setBounds(bounds);
-          await sleep(50);
-        }
-        win.show();
-      }
-    });
-
-    const tray = new Tray(
-      path.join(__dirname, "..", "assets", "tray-Template.png")
-    );
-    const contextMenu = Menu.buildFromTemplate([
-      { type: "normal", label: "Open Sunbeam", click: () => win.show() },
-      {
-        type: "normal",
-        label: "Open Config",
-        click: () =>
-          shell.openPath(
-            path.join(os.homedir(), ".config", "sunbeam", "config.yaml")
-          ),
-      },
+function createTray(win) {
+  const tray = new Tray(
+    path.join(__dirname, "..", "assets", "tray-Template.png")
+  );
+  tray.setContextMenu(
+    Menu.buildFromTemplate([
+      { type: "normal", label: "Show Sunbeam", click: () => win.show() },
       { type: "separator" },
       {
         type: "normal",
@@ -164,67 +119,120 @@ app.whenReady().then(async () => {
       },
       { type: "separator" },
       { type: "normal", label: "Quit", click: () => app.quit() },
-    ]);
-    tray.setContextMenu(contextMenu);
+    ])
+  );
 
-    while (true) {
-      const signal = await runSunbeam(win);
-      if (signal !== 0) {
-        break;
-      }
-      win.hide();
+  return tray;
+}
+
+async function downloadSunbeam() {
+  const octokit = new Octokit();
+
+  const res = await octokit.request(
+    "GET /repos/{owner}/{repo}/releases/latest",
+    {
+      owner: "sunbeamlauncher",
+      repo: "sunbeam",
     }
+  );
+
+  const release = res.data.assets.find(
+    (asset) =>
+      asset.name.toLowerCase().includes(process.platform) &&
+      asset.name.toLowerCase().includes(process.arch)
+  );
+
+  if (!release) {
+    console.error("No release found for your platform");
+    process.exit(1);
+  }
+
+  const dist = path.join(os.tmpdir(), release.name);
+  await download(release.browser_download_url, dist, { extract: true });
+
+  const sunbeamPath = path.join(os.homedir(), ".local", "bin", "sunbeam");
+  fs.renameSync(path.join(dist, "sunbeam"), sunbeamPath);
+
+  fs.rmSync(dist, { recursive: true, force: true });
+
+  return sunbeamPath;
+}
+
+async function startSunbeam(host, port) {
+  // start sunbeam process
+
+  const binPath = path.join(os.homedir(), ".local", "bin");
+  let sunbeamPath = await lookpath("sunbeam", {
+    include: [binPath],
   });
-});
 
-function runSunbeam(win) {
-  return new Promise((resolve, reject) => {
-    const disposables = [];
+  if (!sunbeamPath) {
+    console.log("Sunbeam not found, downloading...");
+    sunbeamPath = await downloadSunbeam();
+  }
 
-    const ptyProcess = pty.spawn("sunbeam", [], {
-      env: {
-        ...process.env,
-        TERM: "xterm-256color",
-        PATH,
-      },
-    });
-
-    disposables.push(
-      ptyProcess.onData((data) => {
-        win.webContents.send("pty-output", data);
-      })
+  return new Promise((resolve) => {
+    const sunbeamProcess = child_process.spawn(
+      sunbeamPath,
+      ["serve", "--host", host, "--port", port],
+      {}
     );
 
-    ipcMain.on("pty-resize", (_, columns, rows) => {
-      ptyProcess.resize(columns, rows);
+    sunbeamProcess.on("exit", () => {
+      console.log("Sunbeam exited");
+      app.quit();
     });
 
-    ipcMain.on("pty-input", (_, data) => {
-      ptyProcess.write(data);
+    sunbeamProcess.on("spawn", () => {
+      resolve();
     });
-
-    app.on("will-quit", () => {
-      ptyProcess.kill();
-    });
-
-    ptyProcess.onExit(({ exitCode, signal }) => {
-      if (!win.isDestroyed()) {
-        win.webContents.send("pty-exit");
-      }
-
-      ipcMain.removeAllListeners("pty-resize");
-      ipcMain.removeAllListeners("pty-input");
-      app.removeAllListeners("will-quit");
-      disposables.forEach((d) => d.dispose());
-
-      if (exitCode === 0) {
-        console.log("Sunbeam exited with code 0");
-        resolve(signal);
-      } else {
-        reject(new Error(`Sunbeam exited with code ${exitCode}`));
-      }
-    });
-
-    win.webContents.send("pty-ready");
   });
 }
+
+function registerShortcut(win) {
+  globalShortcut.register("CommandOrControl+;", async () => {
+    if (win.isVisible()) {
+      win.hide();
+    } else {
+      const centerBounds = getCenterOnCurrentScreen();
+      const winBounds = win.getBounds();
+      if (winBounds.x !== centerBounds.x || winBounds.y !== centerBounds.y) {
+        win.setBounds(centerBounds);
+      }
+      win.show();
+    }
+  });
+}
+
+app.whenReady().then(async () => {
+  const {
+    theme: themeName = "tomorrow-night",
+    host = "localhost",
+    port = await portfinder.getPortPromise(),
+  } = minimist(process.argv.slice(2));
+
+  const themeDir = path.join(__dirname, "..", "themes");
+  const themePath = path.join(themeDir, `${themeName}.json`);
+  var theme = {};
+  if (fs.existsSync(themePath)) {
+    theme = JSON.parse(fs.readFileSync(themePath, "utf-8"));
+  } else {
+    theme = JSON.parse(
+      fs.readFileSync(path.join(themeDir, "tomorrow-night.json"), "utf-8")
+    );
+  }
+
+  ipcMain.handle("theme", async () => {
+    return theme;
+  });
+
+  ipcMain.handle("address", async () => {
+    return `${host}:${port}`;
+  });
+
+  await startSunbeam(host, port);
+  const win = createWindow(theme);
+  createTray(win);
+
+  registerShortcut(win);
+});
