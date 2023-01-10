@@ -5,7 +5,8 @@
   "main": "src/index.js",
   "scripts": {
     "start": "electron .",
-    "build": "electron-builder",
+    "build": "electron-builder --publish never",
+    "release": "electron-builder --publish always",
     "lint": "echo \"No linting configured\"",
     "install-app:mac": "npm run build && rm -rf /Application/Sunbeam.app && cp -r dist/mac-arm64/Sunbeam.app /Applications",
     "refresh-themes": "node scripts/refresh-themes.mjs"
@@ -32,7 +33,7 @@
   "build": {
     "appId": "com.electron.sunbeam",
     "productName": "Sunbeam",
-    "artifactName": "${productName}-${version}-${arch}.${ext}",
+    "artifactName": "${productName}_${platform}_${arch}.${ext}",
     "publish": [
       "github"
     ]
