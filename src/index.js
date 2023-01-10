@@ -7,6 +7,7 @@ const {
   shell,
   Tray,
   Menu,
+  nativeTheme,
 } = require("electron");
 const path = require("path");
 const fs = require("fs");
@@ -54,9 +55,19 @@ function createWindow(theme) {
     resizable: false,
     type: "panel",
     hasShadow: true,
-    backgroundColor: theme.background,
+    backgroundColor: nativeTheme.shouldUseDarkColors
+      ? theme.dark.background
+      : theme.light.background,
   });
   win.loadFile(path.join(__dirname, "index.html"));
+
+  nativeTheme.on("updated", () => {
+    win.setBackgroundColor(
+      nativeTheme.shouldUseDarkColors
+        ? theme.dark.background
+        : theme.light.background
+    );
+  });
 
   win.webContents.setWindowOpenHandler(({ url }) => {
     shell.openExternal(url);
@@ -138,7 +149,7 @@ function startSunbeam(host, port) {
   return new Promise((resolve, reject) => {
     const sunbeamProcess = child_process.spawn(
       shell,
-      ["-lic", `yolo serve --host ${host} --port ${port}`],
+      ["-lic", `sunbeam serve --host ${host} --port ${port}`],
       {
         env: {
           ...process.env,
@@ -195,22 +206,18 @@ function registerShortcut(win) {
 }
 
 app.whenReady().then(async () => {
-  const {
-    theme: themeName = "tomorrow-night",
-    host = "localhost",
-    port = await portfinder.getPortPromise(),
-  } = minimist(process.argv.slice(2));
+  const { host = "localhost", port = await portfinder.getPortPromise() } =
+    minimist(process.argv.slice(2));
 
   const themeDir = path.join(__dirname, "..", "themes");
-  const themePath = path.join(themeDir, `${themeName}.json`);
-  var theme = {};
-  if (fs.existsSync(themePath)) {
-    theme = JSON.parse(fs.readFileSync(themePath, "utf-8"));
-  } else {
-    theme = JSON.parse(
+  var theme = {
+    dark: JSON.parse(
       fs.readFileSync(path.join(themeDir, "tomorrow-night.json"), "utf-8")
-    );
-  }
+    ),
+    light: JSON.parse(
+      fs.readFileSync(path.join(themeDir, "tomorrow.json"), "utf-8")
+    ),
+  };
 
   ipcMain.handle("theme", async () => {
     return theme;

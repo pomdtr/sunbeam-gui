@@ -5,7 +5,9 @@ const terminal = new Terminal({
   fontSize: 13,
   scrollback: 0,
   fontFamily: '"Cascadia Code", Menlo, monospace',
-  theme,
+  theme: window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? theme.dark
+    : theme.light,
 });
 
 const fitAddon = new FitAddon.FitAddon();
@@ -21,6 +23,14 @@ terminal.loadAddon(fitAddon);
 terminal.loadAddon(webglAddon);
 
 terminal.loadAddon(webLinksAddon);
+
+window
+  .matchMedia("(prefers-color-scheme: dark)")
+  .addEventListener("change", function (e) {
+    const newColorScheme = e.matches ? "dark" : "light";
+    terminal.options.theme = e.matches ? theme.dark : theme.light;
+    console.log("new color scheme", newColorScheme);
+  });
 
 try {
   const address = await window.electron.getAddress();
