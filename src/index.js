@@ -12,11 +12,11 @@ const path = require("path");
 const fs = require("fs");
 const os = require("os");
 const child_process = require("child_process");
-const { lookpath } = require("lookpath");
 const download = require("download");
 const { Octokit } = require("octokit");
 const portfinder = require("portfinder");
 const minimist = require("minimist");
+const fetch = require("node-fetch");
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
@@ -56,7 +56,6 @@ function createWindow(theme) {
     hasShadow: true,
     backgroundColor: theme.background,
   });
-  win.setMenu(null);
   win.loadFile(path.join(__dirname, "index.html"));
 
   win.webContents.setWindowOpenHandler(({ url }) => {
@@ -103,8 +102,6 @@ function createTray(win) {
   );
   tray.setContextMenu(
     Menu.buildFromTemplate([
-      { type: "normal", label: "Show Sunbeam", click: () => win.show() },
-      { type: "separator" },
       {
         type: "normal",
         label: "Manual",
@@ -127,53 +124,13 @@ function createTray(win) {
   return tray;
 }
 
-async function downloadSunbeam() {
-  const octokit = new Octokit();
-
-  const res = await octokit.request(
-    "GET /repos/{owner}/{repo}/releases/latest",
-    {
-      owner: "sunbeamlauncher",
-      repo: "sunbeam",
-    }
-  );
-
-  const release = res.data.assets.find(
-    (asset) =>
-      asset.name.toLowerCase().includes(process.platform) &&
-      asset.name.toLowerCase().includes(process.arch)
-  );
-
-  if (!release) {
-    console.error("No release found for your platform");
-    process.exit(1);
-  }
-
-  const dist = path.join(os.tmpdir(), release.name);
-  await download(release.browser_download_url, dist, { extract: true });
-
-  const sunbeamPath = path.join(os.homedir(), ".local", "bin", "sunbeam");
-  fs.renameSync(path.join(dist, "sunbeam"), sunbeamPath);
-
-  fs.rmSync(dist, { recursive: true, force: true });
-
-  return sunbeamPath;
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-async function startSunbeam(host, port) {
+function startSunbeam(host, port) {
   // start sunbeam process
 
-  const binPath = path.join(os.homedir(), ".local", "bin");
-  let sunbeamPath = await lookpath("sunbeam", {
-    include: [binPath],
-  });
-
-  if (!sunbeamPath) {
-    console.log("Sunbeam not found, downloading...");
-    sunbeamPath = await downloadSunbeam();
-  }
-
-  console.log(`Sunbeam path: ${sunbeamPath}`);
   console.log(`Sunbeam host: ${host}`);
   console.log(`Sunbeam port: ${port}`);
 
@@ -181,15 +138,11 @@ async function startSunbeam(host, port) {
   return new Promise((resolve, reject) => {
     const sunbeamProcess = child_process.spawn(
       shell,
-      [
-        os.platform == "darwin" ? "-lc" : "-ic",
-        `${sunbeamPath} serve --host ${host} --port ${port}`,
-      ],
+      ["-lic", `yolo serve --host ${host} --port ${port}`],
       {
         env: {
           ...process.env,
           TERM: "xterm-256color",
-          PATH: `${binPath}:${process.env.PATH}`,
         },
       }
     );
@@ -202,17 +155,26 @@ async function startSunbeam(host, port) {
       console.error(`Sunbeam: ${data}`);
     });
 
+    let exited = false;
     sunbeamProcess.on("exit", () => {
-      console.log("Sunbeam exited");
-      app.quit();
+      exited = true;
+      reject("Sunbeam exited");
     });
 
-    sunbeamProcess.on("spawn", () => {
-      resolve();
-    });
-
-    sunbeamProcess.on("error", (err) => {
-      reject(err);
+    sunbeamProcess.on("spawn", async () => {
+      while (!exited) {
+        console.log("Waiting for Sunbeam to start...");
+        await sleep(1000);
+        try {
+          const res = await fetch(`http://${host}:${port}`);
+          if (res.status === 200) {
+            resolve(`${host}:${port}`);
+            break;
+          }
+        } catch (e) {
+          console.log("Sunbeam not started yet");
+        }
+      }
     });
   });
 }
@@ -254,13 +216,15 @@ app.whenReady().then(async () => {
     return theme;
   });
 
-  ipcMain.handle("address", async () => {
-    return `${host}:${port}`;
-  });
-
-  await startSunbeam(host, port);
+  try {
+    const address = await startSunbeam(host, port);
+    ipcMain.handle("address", async () => {
+      return address;
+    });
+  } catch (e) {
+    console.error(e);
+  }
   const win = createWindow(theme);
-  createTray(win);
-
   registerShortcut(win);
+  createTray(win);
 });
