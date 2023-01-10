@@ -215,9 +215,19 @@ function registerShortcut(win) {
   });
 }
 
+const findDefaultShell = () => {
+  if (process.platform === "win32") {
+    return "bash.exe";
+  }
+  if (process.env.SHELL) {
+    return process.env.SHELL;
+  }
+  return "bash";
+};
+
 app.whenReady().then(async () => {
   const {
-    shell = process.env.SHELL || "/bin/bash",
+    shell = findDefaultShell(),
     host = "localhost",
     port = await portfinder.getPortPromise(),
   } = minimist(process.argv.slice(2));
