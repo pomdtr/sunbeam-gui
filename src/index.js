@@ -246,9 +246,11 @@ app.whenReady().then(async () => {
   });
 
   try {
-    const { host = "localhost", port = await portfinder.getPortPromise() } =
+    const { host = "localhost", port = await portfinder.getPortPromise(), remote = false } =
       args;
-    const address = await startSunbeam(host, port);
+    
+
+    const address = remote ? `${host}:${port}` : await startSunbeam(host, port);
 
     ipcMain.handle("address", async () => {
       return address;
