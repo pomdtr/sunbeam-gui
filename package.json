@@ -8,7 +8,7 @@
     "build": "electron-builder --publish never",
     "release": "electron-builder --publish always",
     "lint": "echo \"No linting configured\"",
-    "install-app:mac": "npm run build && rm -rf /Application/Sunbeam.app && cp -r dist/mac-arm64/Sunbeam.app /Applications",
+    "install-app:mac": "npm run build && rm -rf /Application/Sunbeam.app && cp -r dist/mac-universal/Sunbeam.app /Applications",
     "refresh-themes": "node scripts/refresh-themes.mjs"
   },
   "keywords": [],
@@ -47,7 +47,19 @@
     },
     "linux": {
       "target": {
-        "target": "AppImage"
+        "target": "AppImage",
+        "arch": [
+          "arm64",
+          "x64"
+        ]
+      }
+    },
+    "win": {
+      "target": {
+        "target": "portable",
+        "arch": [
+          "x64"
+        ]
       }
     }
   },

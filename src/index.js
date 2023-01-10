@@ -22,6 +22,7 @@ process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 
 const isSingleInstance = app.requestSingleInstanceLock();
 if (!isSingleInstance) {
+  console.log("Sunbeam is already running");
   app.quit();
   process.exit(0);
 }
@@ -48,6 +49,7 @@ function createWindow(theme) {
     autoHideMenuBar: true,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
+      backgroundThrottling: false,
     },
     resizable: false,
     type: "panel",
@@ -171,12 +173,29 @@ async function startSunbeam(host, port) {
     sunbeamPath = await downloadSunbeam();
   }
 
-  return new Promise((resolve) => {
+  console.log(`Sunbeam path: ${sunbeamPath}`);
+  console.log(`Sunbeam host: ${host}`);
+  console.log(`Sunbeam port: ${port}`);
+  return new Promise((resolve, reject) => {
     const sunbeamProcess = child_process.spawn(
       sunbeamPath,
       ["serve", "--host", host, "--port", port],
-      {}
+      {
+        env: {
+          ...process.env,
+          TERM: "xterm-256colors",
+          PATH: `${binPath}:${process.env.PATH}`,
+        },
+      }
     );
+
+    sunbeamProcess.stdout.on("data", (data) => {
+      console.log(`Sunbeam: ${data}`);
+    });
+
+    sunbeamProcess.stderr.on("data", (data) => {
+      console.error(`Sunbeam: ${data}`);
+    });
 
     sunbeamProcess.on("exit", () => {
       console.log("Sunbeam exited");
@@ -185,6 +204,10 @@ async function startSunbeam(host, port) {
 
     sunbeamProcess.on("spawn", () => {
       resolve();
+    });
+
+    sunbeamProcess.on("error", (err) => {
+      reject(err);
     });
   });
 }
