@@ -39,8 +39,8 @@
       "target": {
         "target": "default",
         "arch": [
-          "arm64",
-          "x64"
+          "x64",
+          "arm64"
         ]
       }
     },
@@ -52,26 +52,12 @@
             "arm64",
             "x64"
           ]
-        },
-        {
-          "target": "rpm",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        },
-        {
-          "target": "rpm",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
         }
       ]
     },
     "win": {
       "target": {
-        "target": "portable",
+        "target": "nsis",
         "arch": [
           "x64",
           "arm64"
