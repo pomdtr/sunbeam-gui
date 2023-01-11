@@ -13,7 +13,7 @@ const terminal = new Terminal({
 const fitAddon = new FitAddon.FitAddon();
 const webglAddon = new WebglAddon.WebglAddon();
 const webLinksAddon = new WebLinksAddon.WebLinksAddon((_, url) => {
-  window.electron.openInBrowser(url);
+  window.electron.open(url);
 });
 
 // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
