@@ -246,11 +246,12 @@ app.whenReady().then(async () => {
   });
 
   try {
-    const { host = "localhost", port = await portfinder.getPortPromise(), remote = false } =
-      args;
-    
+    let { remote: address } = args;
 
-    const address = remote ? `${host}:${port}` : await startSunbeam(host, port);
+    if (!address) {
+      const port = await portfinder.getPortPromise();
+      address = await startSunbeam("localhost", port);
+    }
 
     ipcMain.handle("address", async () => {
       return address;
@@ -261,6 +262,7 @@ app.whenReady().then(async () => {
 
       switch (protocol) {
         case "fs:":
+          const [host, _] = address.split(":");
           if (host !== "localhost" && host !== "0.0.0.0") {
             console.error("Cannot open local file on remote host");
             return;
