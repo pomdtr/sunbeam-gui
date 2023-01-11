@@ -19,6 +19,7 @@ const fetch = require("node-fetch");
 const { parse } = require("url");
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
+const accelerator = "CommandOrControl+;";
 
 const isSingleInstance = app.requestSingleInstanceLock();
 if (!isSingleInstance) {
@@ -118,6 +119,15 @@ function createTray(win) {
     Menu.buildFromTemplate([
       {
         type: "normal",
+        label: "Open Sunbeam",
+        accelerator,
+        click: () => {
+          win.show();
+        },
+      },
+      { type: "separator" },
+      {
+        type: "normal",
         label: "Manual",
         click: () =>
           shell.openExternal("https://sunbeamlauncher.github.io/sunbeam"),
@@ -127,7 +137,7 @@ function createTray(win) {
         label: "Report Bug",
         click: () =>
           shell.openExternal(
-            "http://github.com/SunbeamLauncher/sunbeam/issues/new"
+            "http://github.com/sunbeamlauncher/sunbeam/issues/new"
           ),
       },
       { type: "separator" },
@@ -204,7 +214,7 @@ function startSunbeam(host, port) {
 }
 
 function registerShortcut(win) {
-  globalShortcut.register("CommandOrControl+;", async () => {
+  globalShortcut.register(accelerator, async () => {
     if (win.isVisible()) {
       win.hide();
     } else {
