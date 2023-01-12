@@ -15,8 +15,8 @@ const fs = require("fs");
 const child_process = require("child_process");
 const portfinder = require("portfinder");
 const minimist = require("minimist");
-const fetch = require("node-fetch");
-const { parse } = require("url");
+const url = require("url");
+const waitOn = require("wait-on");
 
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
 const accelerator = "CommandOrControl+;";
@@ -148,10 +148,6 @@ function createTray(win) {
   return tray;
 }
 
-function sleep(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function startSunbeam(host, port) {
   const shell = findDefaultShell();
   return new Promise((resolve, reject) => {
@@ -174,17 +170,12 @@ function startSunbeam(host, port) {
       console.error(`Sunbeam: ${data}`);
     });
 
-    let exited = false;
-    let running = true;
-
     onWillQuit = () => {
       sunbeamProcess.kill();
     };
     app.on("will-quit", onWillQuit);
 
     sunbeamProcess.on("exit", (code, signal) => {
-      exited = true;
-
       if (signal === "SIGINT") {
         app.removeListener("will-quit", onWillQuit);
         app.quit();
@@ -195,19 +186,12 @@ function startSunbeam(host, port) {
     });
 
     sunbeamProcess.on("spawn", async () => {
-      while (!exited) {
-        console.log("Waiting for Sunbeam to start...");
-        await sleep(1000);
-        try {
-          const res = await fetch(`http://${host}:${port}`);
-          if (res.status === 200) {
-            running = true;
-            resolve(`${host}:${port}`);
-            break;
-          }
-        } catch (e) {
-          console.log("Sunbeam not started yet");
-        }
+      try {
+        await waitOn({ resources: [`http://${host}:${port}/ready`] });
+        resolve(`${host}:${port}`);
+      } catch (e) {
+        console.log(e);
+        app.quit();
       }
     });
   });
@@ -244,7 +228,7 @@ app.whenReady().then(async () => {
   const themeDir = path.join(__dirname, "..", "themes");
   var theme = {
     dark: JSON.parse(
-      fs.readFileSync(path.join(themeDir, "tomorrow-night.json"), "utf-8")
+      fs.readFileSync(path.join(themeDir, "gruvbox-dark.json"), "utf-8")
     ),
     light: JSON.parse(
       fs.readFileSync(path.join(themeDir, "tomorrow.json"), "utf-8")
@@ -256,31 +240,28 @@ app.whenReady().then(async () => {
   });
 
   try {
-    let { remote: address } = args;
-
-    if (!address) {
-      const port = await portfinder.getPortPromise();
-      address = await startSunbeam("localhost", port);
-    }
+    const isRemote = !!args.remote;
+    const address = isRemote
+      ? args.remote
+      : await startSunbeam("localhost", await portfinder.getPortPromise());
 
     ipcMain.handle("address", async () => {
       return address;
     });
 
-    ipcMain.handle("open", (_, url) => {
-      const { protocol, path } = parse(url);
+    ipcMain.handle("open", (_, target) => {
+      const { protocol, path } = url.parse(target);
 
       switch (protocol) {
         case "fs:":
-          const [host, _] = address.split(":");
-          if (host !== "localhost" && host !== "0.0.0.0") {
+          if (isRemote) {
             console.error("Cannot open local file on remote host");
             return;
           }
           shell.openPath(path);
           break;
         default:
-          shell.openExternal(url);
+          shell.openExternal(target);
           break;
       }
     });

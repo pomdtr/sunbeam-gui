@@ -2,7 +2,7 @@
   "name": "sunbeam-gui",
   "version": "0.0.15",
   "description": "My Electron application description",
-  "main": "src/index.js",
+  "main": "src/main.js",
   "scripts": {
     "start": "electron .",
     "build": "electron-builder --publish never",
@@ -21,6 +21,7 @@
     "minimist": "^1.2.7",
     "node-fetch": "^2.6.7",
     "portfinder": "^1.0.32",
+    "wait-on": "^7.0.1",
     "xterm": "^5.1.0",
     "xterm-addon-attach": "^0.8.0",
     "xterm-addon-canvas": "^0.3.0",
