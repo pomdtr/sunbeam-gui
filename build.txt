@@ -1,0 +1,37 @@
+  "build": {
+    "appId": "com.electron.sunbeam",
+    "productName": "Sunbeam",
+    "artifactName": "${productName}_${platform}_${arch}.${ext}",
+    "publish": [
+      "github"
+    ],
+    "mac": {
+      "target": {
+        "target": "default",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      }
+    },
+    "linux": {
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "win": {
+      "target": {
+        "target": "nsis",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      }
+    }
+  },

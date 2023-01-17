@@ -5,8 +5,11 @@ const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electron", {
   getTheme: () => ipcRenderer.invoke("theme"),
-  getAddress: () => ipcRenderer.invoke("address"),
-  hideWindow: () => ipcRenderer.invoke("hideWindow"),
-  copy: (text) => ipcRenderer.invoke("copy", text),
-  open: (url) => ipcRenderer.invoke("open", url),
+  sendToPty: (text) => ipcRenderer.invoke("pty-input", text),
+  resizePty: (cols, rows) => ipcRenderer.invoke("pty-resize", cols, rows),
+  onPtyData: (callback) =>
+    ipcRenderer.on("pty-output", (_, data) => {
+      callback(data);
+    }),
+  onExit: () => (callback) => ipcRenderer.on("pty-exited", callback),
 });

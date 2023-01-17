@@ -89,5 +89,6 @@ typings/
 out/
 
 dist/
+build/
 
 .envrc

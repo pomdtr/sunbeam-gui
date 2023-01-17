@@ -2,14 +2,14 @@
   "name": "sunbeam-gui",
   "version": "0.0.15",
   "description": "My Electron application description",
-  "main": "src/main.js",
+  "main": "build/main/main.js",
   "scripts": {
-    "start": "electron .",
-    "build": "electron-builder --publish never",
-    "release": "electron-builder --publish always",
-    "lint": "echo \"No linting configured\"",
-    "install-app:mac": "npm run build && rm -rf /Application/Sunbeam.app && cp -r dist/mac-universal/Sunbeam.app /Applications",
-    "refresh-themes": "node scripts/refresh-themes.mjs"
+    "dev": "node scripts/dev-server.js",
+    "build": "node scripts/build.js",
+    "package": "npm run build && electron-builder",
+    "package:win": "npm run build && electron-builder --win",
+    "package:mac": "npm run build && electron-builder --mac",
+    "package:linux": "npm run build && electron-builder --linux"
   },
   "keywords": [],
   "author": {
@@ -18,57 +18,19 @@
   },
   "license": "MIT",
   "dependencies": {
-    "minimist": "^1.2.7",
-    "node-fetch": "^2.6.7",
-    "portfinder": "^1.0.32",
-    "wait-on": "^7.0.1",
+    "node-pty": "^0.10.1",
     "xterm": "^5.1.0",
-    "xterm-addon-attach": "^0.8.0",
-    "xterm-addon-canvas": "^0.3.0",
     "xterm-addon-fit": "^0.7.0",
     "xterm-addon-web-links": "^0.8.0",
     "xterm-addon-webgl": "^0.14.0"
   },
-  "build": {
-    "appId": "com.electron.sunbeam",
-    "productName": "Sunbeam",
-    "artifactName": "${productName}_${platform}_${arch}.${ext}",
-    "publish": [
-      "github"
-    ],
-    "mac": {
-      "target": {
-        "target": "default",
-        "arch": [
-          "x64",
-          "arm64"
-        ]
-      }
-    },
-    "linux": {
-      "target": [
-        {
-          "target": "AppImage",
-          "arch": [
-            "arm64",
-            "x64"
-          ]
-        }
-      ]
-    },
-    "win": {
-      "target": {
-        "target": "nsis",
-        "arch": [
-          "x64",
-          "arm64"
-        ]
-      }
-    }
-  },
   "devDependencies": {
+    "chokidar": "^3.5.3",
     "degit": "^2.8.4",
     "electron": "22.0.0",
-    "electron-builder": "^23.6.0"
+    "electron-builder": "^23.6.0",
+    "electron-rebuild": "^3.2.9",
+    "typescript": "^4.9.4",
+    "vite": "^4.0.4"
   }
 }
