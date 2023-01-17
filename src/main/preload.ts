@@ -4,7 +4,7 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("electron", {
-  getTheme: () => ipcRenderer.invoke("theme"),
+  ready: () => ipcRenderer.invoke("ready"),
   sendToPty: (text) => ipcRenderer.invoke("pty-input", text),
   resizePty: (cols, rows) => ipcRenderer.invoke("pty-resize", cols, rows),
   onPtyData: (callback) =>

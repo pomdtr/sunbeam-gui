@@ -7,6 +7,7 @@ declare global {
   interface Window {
     electron: {
       getTheme: () => { dark: any; light: any };
+      ready: () => void;
       sendToPty: (data: string) => void;
       onPtyData: (callback: (data: any) => void) => void;
       onExit: (callback: () => void) => void;
@@ -76,6 +77,8 @@ async function main() {
       "Sunbeam not found! Please install sunbeam and setup your shell."
     );
   }
+
+  window.electron.ready();
 
   fitAddon.fit();
   terminal.focus();

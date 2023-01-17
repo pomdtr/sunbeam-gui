@@ -41,7 +41,6 @@ function createWindow() {
       devTools: true,
     },
     resizable: false,
-    // show: false,
     type: "panel",
     hasShadow: true,
   });
@@ -105,7 +104,7 @@ function createTray(win) {
     electron.Menu.buildFromTemplate([
       {
         type: "normal",
-        label: "Open Sunbeam",
+        label: "Show Sunbeam",
         accelerator,
         click: () => {
           win.show();
@@ -177,9 +176,17 @@ electron.app.whenReady().then(async () => {
 
   electron.Menu.setApplicationMenu(null);
 
+  console.log("Creating window");
   const win = createWindow();
+  console.log("Registering shortcut");
   registerShortcut(win);
+  console.log("Creating tray");
   createTray(win);
+
+  console.log("Waiting for ready");
+  await new Promise((resolve) => {
+    electron.ipcMain.handleOnce("ready", resolve);
+  });
 
   const shell = findDefaultShell();
   let [ptyCols, ptyRows] = [-1, -1];
